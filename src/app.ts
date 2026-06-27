@@ -18,6 +18,10 @@ import sseRoutes from './routes/sse.js'
 export function createApp(): express.Express {
   const app = express()
 
+  // Trust the X-Forwarded-Proto header from nginx so express-session sees the
+  // connection as HTTPS and sets the secure session cookie correctly.
+  if (process.env.NODE_ENV === 'production') app.set('trust proxy', 1)
+
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
