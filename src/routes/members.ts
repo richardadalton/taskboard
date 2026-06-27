@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { Resend } from 'resend'
 import rateLimit from 'express-rate-limit'
 import { db } from '../db.js'
-import { disconnectUser } from '../sse.js'
+import { broadcast, disconnectUser } from '../sse.js'
 import { requireAuth } from '../middleware/require-auth.js'
 import type { Board, Invitation, BoardMember } from '../types.js'
 import nunjucks from 'nunjucks'
@@ -44,6 +44,25 @@ router.get('/invitations/:token', (req, res) => {
     `INSERT OR IGNORE INTO board_members (board_id, user_id, role) VALUES (?, ?, 'collaborator')`
   ).run(inv.board_id, req.user!.id)
   db.prepare("UPDATE invitations SET accepted_at = datetime('now') WHERE id = ?").run(inv.id)
+
+  // Notify everyone on the board that a new member joined
+  const members = db
+    .prepare<number, BoardMember & { username: string; avatar_url: string | null }>(
+      `SELECT bm.*, u.username, u.avatar_url
+       FROM board_members bm JOIN users u ON u.id = bm.user_id
+       WHERE bm.board_id = ? ORDER BY bm.role DESC, u.username ASC`
+    )
+    .all(inv.board_id)
+  broadcast(
+    inv.board_id,
+    `<ul class="member-list" id="member-list" hx-swap-oob="true">
+      ${members.map(m => `<li class="member-item" id="member-${m.user_id}">
+        ${m.avatar_url ? `<img src="${m.avatar_url}" alt="" class="avatar" width="24" height="24">` : ''}
+        <span class="member-name">${m.username}</span>
+        <span class="member-role">${m.role}</span>
+      </li>`).join('')}
+    </ul>`
+  )
 
   res.redirect(`/boards/${inv.board_id}`)
 })

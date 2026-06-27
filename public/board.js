@@ -4,7 +4,7 @@
   const boardId = page.dataset.boardId
 
   function initSortable(status) {
-    const col = document.getElementById('column-' + status + '-board')
+    const col = document.getElementById('column-' + status + '-list')
     if (!col) return
 
     new Sortable(col, {
