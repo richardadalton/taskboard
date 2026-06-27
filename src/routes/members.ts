@@ -35,7 +35,17 @@ router.get('/invitations/:token', (req, res) => {
     )
     .get(inv.board_id, req.user!.id)
 
-  res.render('accept-invite.njk', { inv, user: req.user, alreadyMember: (alreadyMember?.count ?? 0) > 0 })
+  if (alreadyMember && alreadyMember.count > 0) {
+    return res.render('accept-invite.njk', { inv, user: req.user, alreadyMember: true })
+  }
+
+  // Logged-in user who isn't yet a member — accept automatically
+  db.prepare(
+    `INSERT OR IGNORE INTO board_members (board_id, user_id, role) VALUES (?, ?, 'collaborator')`
+  ).run(inv.board_id, req.user!.id)
+  db.prepare("UPDATE invitations SET accepted_at = datetime('now') WHERE id = ?").run(inv.id)
+
+  res.redirect(`/boards/${inv.board_id}`)
 })
 
 router.use(requireAuth)
@@ -107,28 +117,6 @@ router.post('/boards/:id/invite', inviteRateLimit, async (req, res) => {
   }
 
   res.send(nunjucks.render('partials/invite-sent.njk', { email, inviteUrl }))
-})
-
-// Accept invitation — process
-router.post('/invitations/:token', (req, res) => {
-  const inv = db
-    .prepare<string, Invitation>(
-      `SELECT * FROM invitations
-       WHERE token = ? AND accepted_at IS NULL AND expires_at > datetime('now')`
-    )
-    .get(req.params.token)
-
-  if (!inv) return res.status(404).render('invite-invalid.njk')
-
-  const userId = req.user!.id
-
-  db.prepare(
-    `INSERT OR IGNORE INTO board_members (board_id, user_id, role) VALUES (?, ?, 'collaborator')`
-  ).run(inv.board_id, userId)
-
-  db.prepare("UPDATE invitations SET accepted_at = datetime('now') WHERE id = ?").run(inv.id)
-
-  res.redirect(`/boards/${inv.board_id}`)
 })
 
 // Remove a member — owner only
