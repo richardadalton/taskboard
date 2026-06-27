@@ -1,0 +1,36 @@
+<input type="hidden" name="board_id" value="{{ boardId }}">
+
+<div class="form-row">
+  <input type="text"
+         name="title"
+         value="{% if task %}{{ task.title }}{% endif %}"
+         placeholder="Task title"
+         class="input-title"
+         required
+         autofocus>
+</div>
+
+<div class="form-row">
+  <textarea name="notes"
+            placeholder="Notes (optional)"
+            class="input-notes"
+            rows="2">{% if task %}{{ task.notes }}{% endif %}</textarea>
+</div>
+
+<div class="form-row form-row-inline">
+  <label>
+    Due date
+    <input type="date"
+           name="due_date"
+           value="{% if task %}{{ task.due_date }}{% endif %}">
+  </label>
+
+  <label>
+    Priority
+    <select name="priority">
+      <option value="low"    {% if task and task.priority == 'low'    %}selected{% endif %}>Low</option>
+      <option value="normal" {% if not task or task.priority == 'normal' %}selected{% endif %}>Normal</option>
+      <option value="high"   {% if task and task.priority == 'high'   %}selected{% endif %}>High</option>
+    </select>
+  </label>
+</div>

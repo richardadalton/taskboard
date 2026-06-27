@@ -1,0 +1,46 @@
+{#
+  HATEOAS: the server decides which affordances to render based on task state and role.
+  Column position (not a toggle button) communicates status to the user.
+#}
+<li id="task-{{ task.id }}"
+    data-task-id="{{ task.id }}"
+    class="task-item{% if task.status == 'done' %} task-done{% endif %}{% if task.is_overdue %} task-overdue{% endif %}">
+
+  <span class="drag-handle" aria-hidden="true">⠿</span>
+
+  <div class="task-body">
+    <span class="task-title">{{ task.title }}</span>
+    {% if task.notes %}
+    <span class="task-notes">{{ task.notes }}</span>
+    {% endif %}
+    <div class="task-meta">
+      {% if task.due_date %}
+      <span class="task-due{% if task.is_overdue %} task-due-overdue{% endif %}">
+        {{ task.due_date }}
+      </span>
+      {% endif %}
+      {% if task.priority != 'normal' %}
+      <span class="task-priority task-priority-{{ task.priority }}">{{ task.priority }}</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="task-actions">
+    {% if task.status != 'done' %}
+    <button class="btn-icon"
+            hx-get="/tasks/{{ task.id }}/edit"
+            hx-target="#task-{{ task.id }}"
+            hx-swap="outerHTML"
+            aria-label="Edit task">✏</button>
+    {% endif %}
+
+    {% if task.created_by == currentUserId or userRole == 'owner' %}
+    <button class="btn-icon btn-danger"
+            hx-get="/tasks/{{ task.id }}/confirm-delete"
+            hx-target="#task-{{ task.id }}"
+            hx-swap="outerHTML"
+            aria-label="Delete task">✕</button>
+    {% endif %}
+  </div>
+
+</li>

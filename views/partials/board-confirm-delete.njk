@@ -1,0 +1,27 @@
+<div class="board-header" id="board-header">
+  <div class="board-header-title">
+    <a href="/" class="back-link">← Boards</a>
+    <h1 class="board-name">{{ board.name }}</h1>
+  </div>
+  <form class="delete-confirm-form"
+        hx-delete="/boards/{{ board.id }}"
+        hx-target="#board-header"
+        hx-swap="outerHTML">
+    <label class="confirm-label">Type <strong>{{ board.name }}</strong> to confirm:</label>
+    <input type="text"
+           name="confirm_name"
+           class="input-board-name"
+           autocomplete="off"
+           autofocus
+           data-board-name="{{ board.name }}"
+           oninput="this.form.querySelector('.btn-danger').disabled = this.value !== this.dataset.boardName">
+    <div class="form-actions">
+      <button type="submit" class="btn btn-danger" disabled>Delete</button>
+      <button type="button"
+              class="btn btn-secondary"
+              hx-get="/boards/{{ board.id }}/header"
+              hx-target="#board-header"
+              hx-swap="outerHTML">Cancel</button>
+    </div>
+  </form>
+</div>

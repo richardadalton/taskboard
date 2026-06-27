@@ -1,0 +1,36 @@
+{% if task %}
+{# Edit mode: replaces the existing <li> #}
+<li id="task-{{ task.id }}" class="task-item task-form-item">
+  <form hx-put="/tasks/{{ task.id }}"
+        hx-target="#task-{{ task.id }}"
+        hx-swap="outerHTML">
+    {% include "partials/_task-form-fields.njk" %}
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Save</button>
+      <button type="button"
+              class="btn btn-secondary"
+              hx-get="/tasks/{{ task.id }}"
+              hx-target="#task-{{ task.id }}"
+              hx-swap="outerHTML">Cancel</button>
+    </div>
+  </form>
+</li>
+
+{% else %}
+{# New task mode: rendered into #new-task-form div; result card goes to the todo column #}
+<form class="task-form-new"
+      hx-post="/tasks"
+      hx-target="#column-todo-list"
+      hx-swap="afterbegin"
+      hx-on::after-request="if(event.detail.successful) this.reset()">
+  {% include "partials/_task-form-fields.njk" %}
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Add task</button>
+    <button type="button"
+            class="btn btn-secondary"
+            hx-get="/tasks/new-cancel"
+            hx-target="#new-task-form"
+            hx-swap="innerHTML">Cancel</button>
+  </div>
+</form>
+{% endif %}

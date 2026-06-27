@@ -1,0 +1,12 @@
+<li id="board-{{ board.id }}"
+    class="board-card"
+    hx-target="this"
+    hx-swap="outerHTML">
+  <a href="/boards/{{ board.id }}" class="board-card-link">
+    <span class="board-card-name">{{ board.name }}</span>
+    <span class="board-card-count">{{ board.task_count }} open</span>
+    {% if board.role == 'collaborator' %}
+    <span class="board-card-badge">Shared</span>
+    {% endif %}
+  </a>
+</li>

@@ -1,0 +1,27 @@
+{% extends "layout.njk" %}
+
+{% block title %}My Boards — Taskboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>My Boards</h1>
+  <button class="btn btn-primary"
+          hx-get="/boards/new"
+          hx-target="#new-board-form"
+          hx-swap="innerHTML">
+    New board
+  </button>
+</div>
+
+<div id="new-board-form"></div>
+
+<ul id="board-grid" class="board-grid">
+  {% for board in boards %}
+    {% include "partials/board-item.njk" %}
+  {% else %}
+    <li class="empty-state">
+      <p>No boards yet. Create one to get started.</p>
+    </li>
+  {% endfor %}
+</ul>
+{% endblock %}

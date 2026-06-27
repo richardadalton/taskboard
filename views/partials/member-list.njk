@@ -1,0 +1,20 @@
+<ul class="member-list" id="member-list">
+  {% for member in members %}
+  <li class="member-item" id="member-{{ member.user_id }}">
+    {% if member.avatar_url %}
+    <img src="{{ member.avatar_url }}" alt="{{ member.username }}" class="avatar" width="24" height="24">
+    {% endif %}
+    <span class="member-name">{{ member.username }}</span>
+    <span class="member-role">{{ member.role }}</span>
+
+    {# Owner can remove collaborators but not themselves #}
+    {% if user.id != member.user_id and userRole == 'owner' and member.role != 'owner' %}
+    <button class="btn-icon btn-danger"
+            hx-delete="/boards/{{ boardId }}/members/{{ member.user_id }}"
+            hx-target="#member-list"
+            hx-swap="outerHTML"
+            aria-label="Remove {{ member.username }}">✕</button>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>

@@ -1,0 +1,22 @@
+<div id="invite-area">
+  <form hx-post="/lists/{{ listId }}/invite"
+        hx-target="#invite-area"
+        hx-swap="innerHTML">
+    <label>
+      Email address
+      <input type="email"
+             name="email"
+             placeholder="colleague@example.com"
+             required
+             autofocus>
+    </label>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Send invite</button>
+      <button type="button"
+              class="btn btn-secondary"
+              hx-get="/lists/{{ listId }}/invite-cancel"
+              hx-target="#invite-area"
+              hx-swap="innerHTML">Cancel</button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,21 @@
+<div class="board-header" id="board-header">
+  <form class="board-rename-form"
+        hx-patch="/boards/{{ board.id }}"
+        hx-target="#board-header"
+        hx-swap="outerHTML">
+    <input type="text"
+           name="name"
+           value="{{ board.name }}"
+           class="input-board-name"
+           required
+           autofocus>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Save</button>
+      <button type="button"
+              class="btn btn-secondary"
+              hx-get="/boards/{{ board.id }}/header"
+              hx-target="#board-header"
+              hx-swap="outerHTML">Cancel</button>
+    </div>
+  </form>
+</div>

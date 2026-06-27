@@ -1,0 +1,30 @@
+{#
+  Role-based affordances: the owner sees rename/delete/invite controls; a collaborator
+  sees only the leave option. The client renders whatever the server sends — no role
+  checks in JavaScript.
+#}
+<div class="board-header" id="board-header">
+  <div class="board-header-title">
+    <a href="/" class="back-link">← Boards</a>
+    <h1 class="board-name">{{ board.name }}</h1>
+  </div>
+
+  <div class="board-header-actions">
+    {% if userRole == 'owner' %}
+      <button class="btn btn-secondary"
+              hx-get="/boards/{{ board.id }}/edit"
+              hx-target="#board-header"
+              hx-swap="outerHTML">Rename</button>
+
+      <button class="btn btn-danger"
+              hx-get="/boards/{{ board.id }}/confirm-delete"
+              hx-target="#board-header"
+              hx-swap="outerHTML">Delete board</button>
+    {% else %}
+      <form hx-post="/boards/{{ board.id }}/leave"
+            hx-confirm="Leave this board?">
+        <button class="btn btn-secondary">Leave board</button>
+      </form>
+    {% endif %}
+  </div>
+</div>

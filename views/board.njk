@@ -1,0 +1,87 @@
+{% extends "layout.njk" %}
+
+{% block title %}{{ board.name }} — Taskboard{% endblock %}
+{% block mainClass %}main-content--wide{% endblock %}
+
+{% block content %}
+<div class="board-page"
+     hx-ext="sse"
+     sse-connect="/sse?boardId={{ board.id }}">
+
+  {# Receives SSE broadcasts. htmx extracts hx-swap-oob elements and applies
+     them to their targets; this element itself stays hidden and empty. #}
+  <span hidden id="sse-sink" sse-swap="message" hx-swap="innerHTML"></span>
+
+  <div id="board-header">
+    {% include "partials/board-header.njk" %}
+  </div>
+
+  <div class="kanban-controls">
+    <button class="btn btn-primary"
+            hx-get="/tasks/new?boardId={{ board.id }}"
+            hx-target="#new-task-form"
+            hx-swap="innerHTML">
+      Add task
+    </button>
+  </div>
+
+  <div id="new-task-form"></div>
+
+  <div id="kanban-wrap">
+    {% include "partials/kanban-board.njk" %}
+  </div>
+
+  <div id="members-section" class="members-section">
+    <h2>Members</h2>
+    <div id="member-list">
+      {% include "partials/member-list.njk" %}
+    </div>
+
+    {% if userRole == 'owner' %}
+    <div id="invite-area">
+      <button class="btn btn-secondary"
+              hx-get="/boards/{{ board.id }}/invite"
+              hx-target="#invite-area"
+              hx-swap="innerHTML">
+        Invite someone
+      </button>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    const boardId = {{ board.id }}
+
+    function initSortable(status) {
+      const col = document.getElementById('column-' + status + '-board')
+      if (!col) return
+
+      new Sortable(col, {
+        group: 'kanban',
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'task-ghost',
+        onEnd (evt) {
+          const taskId = evt.item.dataset.taskId
+          const newStatus = evt.to.dataset.status
+          const ids = [...evt.to.querySelectorAll('[data-task-id]')]
+            .map(el => el.dataset.taskId)
+            .join(',')
+          htmx.ajax('PATCH', '/tasks/' + taskId + '/move', {
+            values: { status: newStatus, ids },
+            swap: 'none',
+          })
+        },
+      })
+    }
+
+    initSortable('todo')
+    initSortable('in_progress')
+    initSortable('done')
+  })()
+</script>
+{% endblock %}

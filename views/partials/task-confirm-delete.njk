@@ -1,0 +1,21 @@
+{#
+  Inline confirmation — no JS dialogs. The server provides the confirmation affordance,
+  keeping the decision flow server-driven rather than relying on window.confirm().
+#}
+<li id="task-{{ task.id }}" class="task-item task-confirming">
+  <span class="confirm-message">Delete "<strong>{{ task.title }}</strong>"?</span>
+  <div class="task-actions">
+    <button class="btn btn-danger"
+            hx-delete="/tasks/{{ task.id }}"
+            hx-target="#task-{{ task.id }}"
+            hx-swap="outerHTML">
+      Delete
+    </button>
+    <button class="btn btn-secondary"
+            hx-get="/tasks/{{ task.id }}"
+            hx-target="#task-{{ task.id }}"
+            hx-swap="outerHTML">
+      Cancel
+    </button>
+  </div>
+</li>

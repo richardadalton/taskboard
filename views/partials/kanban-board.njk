@@ -1,0 +1,45 @@
+<div class="kanban-board">
+
+  <div class="kanban-column">
+    <div class="column-header">
+      <span class="column-title">To Do</span>
+      <span class="column-count">{{ todoTasks | length }}</span>
+    </div>
+    <ul id="column-todo-list" class="column-list" data-status="todo">
+      {% for task in todoTasks %}
+        {% include "partials/task-item.njk" %}
+      {% else %}
+        <li class="column-empty">Nothing here yet.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="kanban-column">
+    <div class="column-header">
+      <span class="column-title">In Progress</span>
+      <span class="column-count">{{ inProgressTasks | length }}</span>
+    </div>
+    <ul id="column-in_progress-list" class="column-list" data-status="in_progress">
+      {% for task in inProgressTasks %}
+        {% include "partials/task-item.njk" %}
+      {% else %}
+        <li class="column-empty">Nothing in progress.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="kanban-column">
+    <div class="column-header">
+      <span class="column-title">Done</span>
+      <span class="column-count">{{ doneTasks | length }}</span>
+    </div>
+    <ul id="column-done-list" class="column-list" data-status="done">
+      {% for task in doneTasks %}
+        {% include "partials/task-item.njk" %}
+      {% else %}
+        <li class="column-empty">No completed tasks.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+</div>
