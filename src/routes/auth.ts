@@ -8,10 +8,21 @@ router.get('/login', (req, res) => {
   res.render('login.njk')
 })
 
-router.get(
-  '/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-)
+router.get('/auth/google', (req, res, next) => {
+  // Passport regenerates the session on login, which wipes session data including
+  // returnTo. Wrap regenerate to carry returnTo across into the new session.
+  const returnTo = req.session.returnTo
+  if (returnTo) {
+    const orig = req.session.regenerate.bind(req.session)
+    ;(req.session as any).regenerate = (cb: (err?: Error) => void) => {
+      orig((err?: Error) => {
+        if (!err) req.session.returnTo = returnTo
+        cb(err)
+      })
+    }
+  }
+  passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next)
+})
 
 router.get(
   '/auth/google/callback',
