@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8006:3000"
+    env_file: /home/richard/taskboard/.env
+    volumes:
+      - /home/richard/taskboard/data:/app/data
+    restart: unless-stopped
