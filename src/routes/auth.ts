@@ -19,7 +19,8 @@ router.get(
   (req, res) => {
     const returnTo = req.session.returnTo ?? '/'
     delete req.session.returnTo
-    res.redirect(returnTo)
+    const safeReturnTo = returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/'
+    res.redirect(safeReturnTo)
   }
 )
 

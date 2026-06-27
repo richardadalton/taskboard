@@ -27,7 +27,7 @@ router.get('/sse', (req, res) => {
   // Heartbeat every 30s to survive proxies that close idle connections
   const heartbeat = setInterval(() => res.write(': heartbeat\n\n'), 30_000)
 
-  const remove = addClient(res, boardId)
+  const remove = addClient(res, boardId, req.user!.id)
   req.on('close', () => {
     clearInterval(heartbeat)
     remove()

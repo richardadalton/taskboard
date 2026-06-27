@@ -1,8 +1,7 @@
 <form class="new-board-form"
       hx-post="/boards"
       hx-target="#board-grid"
-      hx-swap="afterbegin"
-      hx-on::after-request="if(event.detail.successful){ this.closest('#new-board-form').innerHTML='' }">
+      hx-swap="afterbegin">
   <input type="text"
          name="name"
          placeholder="Board name"
@@ -13,6 +12,6 @@
     <button type="submit" class="btn btn-primary">Create</button>
     <button type="button"
             class="btn btn-secondary"
-            onclick="document.getElementById('new-board-form').innerHTML=''">Cancel</button>
+            data-clear-target="new-board-form">Cancel</button>
   </div>
 </form>

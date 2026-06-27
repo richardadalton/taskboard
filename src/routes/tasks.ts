@@ -10,6 +10,18 @@ const router = Router()
 router.use(requireAuth)
 
 const VALID_STATUSES = ['todo', 'in_progress', 'done'] as const
+const VALID_PRIORITIES = ['low', 'normal', 'high'] as const
+
+function parsePriority(raw: unknown): string | null {
+  const v = String(raw ?? '').trim()
+  return (VALID_PRIORITIES as readonly string[]).includes(v) ? v : null
+}
+
+function parseDueDate(raw: unknown): string | null {
+  const v = String(raw ?? '').trim()
+  if (!v) return null
+  return /^\d{4}-\d{2}-\d{2}$/.test(v) && !isNaN(Date.parse(v)) ? v : null
+}
 
 function getTask(id: number): Task | undefined {
   return db
@@ -89,6 +101,10 @@ router.post('/tasks', (req, res) => {
   const title = (req.body.title as string)?.trim()
   if (!title) return res.status(422).send('Title is required')
 
+  const priority = parsePriority(req.body.priority) ?? 'normal'
+  const due_date = parseDueDate(req.body.due_date)
+  if (req.body.due_date && !due_date) return res.status(422).send('Invalid due date')
+
   const result = db
     .prepare(
       `INSERT INTO tasks (board_id, title, notes, due_date, priority, status, created_by, position)
@@ -99,8 +115,8 @@ router.post('/tasks', (req, res) => {
       board_id: boardId,
       title,
       notes: (req.body.notes as string)?.trim() || null,
-      due_date: (req.body.due_date as string) || null,
-      priority: (req.body.priority as string) || 'normal',
+      due_date,
+      priority,
       created_by: req.user!.id,
     })
 
@@ -148,6 +164,10 @@ router.put('/tasks/:id', (req, res) => {
   const title = (req.body.title as string)?.trim()
   if (!title) return res.status(422).send('Title is required')
 
+  const priority = parsePriority(req.body.priority) ?? 'normal'
+  const due_date = parseDueDate(req.body.due_date)
+  if (req.body.due_date && !due_date) return res.status(422).send('Invalid due date')
+
   db.prepare(
     `UPDATE tasks SET title = @title, notes = @notes, due_date = @due_date, priority = @priority
      WHERE id = @id`
@@ -155,8 +175,8 @@ router.put('/tasks/:id', (req, res) => {
     id: task.id,
     title,
     notes: (req.body.notes as string)?.trim() || null,
-    due_date: (req.body.due_date as string) || null,
-    priority: (req.body.priority as string) || 'normal',
+    due_date,
+    priority,
   })
 
   const updated = getTask(task.id)!

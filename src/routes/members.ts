@@ -1,7 +1,9 @@
 import { Router } from 'express'
 import { v4 as uuidv4 } from 'uuid'
 import { Resend } from 'resend'
+import rateLimit from 'express-rate-limit'
 import { db } from '../db.js'
+import { disconnectUser } from '../sse.js'
 import { requireAuth } from '../middleware/require-auth.js'
 import type { Board, Invitation, BoardMember } from '../types.js'
 import nunjucks from 'nunjucks'
@@ -11,6 +13,15 @@ const router = Router()
 router.use(requireAuth)
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
+
+const inviteRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 20,
+  keyGenerator: (req) => String(req.user!.id),
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: 'Too many invitations sent — please wait before trying again.',
+})
 
 // Invite form fragment — owner only
 router.get('/boards/:id/invite', (req, res) => {
@@ -34,7 +45,7 @@ router.get('/boards/:id/invite-cancel', (req, res) => {
 })
 
 // Send invitation
-router.post('/boards/:id/invite', async (req, res) => {
+router.post('/boards/:id/invite', inviteRateLimit, async (req, res) => {
   const boardId = Number(req.params.id)
   const board = db.prepare<number, Board>('SELECT * FROM boards WHERE id = ?').get(boardId)
 
@@ -42,6 +53,7 @@ router.post('/boards/:id/invite', async (req, res) => {
 
   const email = (req.body.email as string)?.trim().toLowerCase()
   if (!email) return res.status(422).send('Email is required')
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(422).send('Invalid email address')
 
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
   const token = uuidv4()
@@ -119,6 +131,7 @@ router.delete('/boards/:id/members/:userId', (req, res) => {
   if (targetId === req.user!.id) return res.status(422).send("Can't remove yourself")
 
   db.prepare('DELETE FROM board_members WHERE board_id = ? AND user_id = ?').run(boardId, targetId)
+  disconnectUser(boardId, targetId)
 
   const members = db
     .prepare<number, BoardMember>(
