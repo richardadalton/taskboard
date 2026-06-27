@@ -1,5 +1,5 @@
 <div id="invite-area">
-  <form hx-post="/boards/{{ listId }}/invite"
+  <form hx-post="/boards/{{ boardId }}/invite"
         hx-target="#invite-area"
         hx-swap="innerHTML">
     <label>
@@ -14,7 +14,7 @@
       <button type="submit" class="btn btn-primary">Send invite</button>
       <button type="button"
               class="btn btn-secondary"
-              hx-get="/boards/{{ listId }}/invite-cancel"
+              hx-get="/boards/{{ boardId }}/invite-cancel"
               hx-target="#invite-area"
               hx-swap="innerHTML">Cancel</button>
     </div>

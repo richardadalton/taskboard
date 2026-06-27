@@ -1,1 +1,9 @@
-<p class="invite-sent">Invitation sent to <strong>{{ email }}</strong>.</p>
+<div class="invite-sent">
+  {% if email %}
+  <p>Invitation link for <strong>{{ email }}</strong>:</p>
+  {% endif %}
+  <div class="invite-link-row">
+    <input type="text" class="invite-link-input" value="{{ inviteUrl }}" readonly>
+    <button class="btn btn-secondary" data-copy="{{ inviteUrl }}">Copy</button>
+  </div>
+</div>

@@ -93,6 +93,34 @@ try {
 } catch {}
 try { db.exec('DROP INDEX IF EXISTS idx_list_members_user_id') } catch {}
 try { db.exec('CREATE INDEX IF NOT EXISTS idx_board_members_user_id ON board_members(user_id)') } catch {}
+// Fix invitations.board_id FK that still references lists(id) on databases
+// migrated before SQLite 3.26 (which didn't update FK refs on table rename)
+try {
+  const row = db.prepare<[], { sql: string }>(
+    "SELECT sql FROM sqlite_master WHERE type='table' AND name='invitations'"
+  ).get()
+  if (row?.sql?.includes('REFERENCES lists(id)')) {
+    db.pragma('foreign_keys = OFF')
+    db.exec(`
+      BEGIN;
+      CREATE TABLE invitations_new (
+        id          INTEGER PRIMARY KEY,
+        board_id    INTEGER NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+        email       TEXT NOT NULL,
+        token       TEXT UNIQUE NOT NULL,
+        invited_by  INTEGER NOT NULL REFERENCES users(id),
+        accepted_at TEXT,
+        expires_at  TEXT NOT NULL,
+        created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      INSERT INTO invitations_new SELECT * FROM invitations;
+      DROP TABLE invitations;
+      ALTER TABLE invitations_new RENAME TO invitations;
+      COMMIT;
+    `)
+    db.pragma('foreign_keys = ON')
+  }
+} catch {}
 
 // Remove expired sessions on startup
 db.prepare('DELETE FROM sessions WHERE expired_at < ?').run(Date.now())

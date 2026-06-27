@@ -10,9 +10,35 @@ import nunjucks from 'nunjucks'
 
 const router = Router()
 
-router.use(requireAuth)
-
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
+
+// Accept invitation — show confirmation page (public: no auth required)
+router.get('/invitations/:token', (req, res) => {
+  const inv = db
+    .prepare<string, Invitation & { board_name: string }>(
+      `SELECT i.*, b.name AS board_name
+       FROM invitations i JOIN boards b ON b.id = i.board_id
+       WHERE i.token = ? AND i.accepted_at IS NULL AND i.expires_at > datetime('now')`
+    )
+    .get(req.params.token)
+
+  if (!inv) return res.status(404).render('invite-invalid.njk')
+
+  if (!req.isAuthenticated()) {
+    req.session.returnTo = req.originalUrl
+    return res.render('accept-invite.njk', { inv, user: null })
+  }
+
+  const alreadyMember = db
+    .prepare<[number, number], { count: number }>(
+      'SELECT count(*) as count FROM board_members WHERE board_id = ? AND user_id = ?'
+    )
+    .get(inv.board_id, req.user!.id)
+
+  res.render('accept-invite.njk', { inv, user: req.user, alreadyMember: (alreadyMember?.count ?? 0) > 0 })
+})
+
+router.use(requireAuth)
 
 const inviteRateLimit = rateLimit({
   windowMs: 60 * 60 * 1000,
@@ -80,22 +106,7 @@ router.post('/boards/:id/invite', inviteRateLimit, async (req, res) => {
     console.log(`[dev] Invite link for ${email}: ${inviteUrl}`)
   }
 
-  res.send(nunjucks.render('partials/invite-sent.njk', { email }))
-})
-
-// Accept invitation — show confirmation page
-router.get('/invitations/:token', (req, res) => {
-  const inv = db
-    .prepare<string, Invitation & { board_name: string }>(
-      `SELECT i.*, b.name AS board_name
-       FROM invitations i JOIN boards b ON b.id = i.board_id
-       WHERE i.token = ? AND i.accepted_at IS NULL AND i.expires_at > datetime('now')`
-    )
-    .get(req.params.token)
-
-  if (!inv) return res.status(404).render('invite-invalid.njk')
-
-  res.render('accept-invite.njk', { inv, user: req.user })
+  res.send(nunjucks.render('partials/invite-sent.njk', { email, inviteUrl }))
 })
 
 // Accept invitation — process

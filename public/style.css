@@ -356,7 +356,10 @@ select {
 .member-name { flex: 1; font-weight: 500; }
 .member-role { font-size: .8rem; color: var(--color-muted); }
 
-.invite-sent { color: var(--color-muted); font-size: .9rem; padding: .5rem 0; }
+.invite-sent { font-size: .9rem; padding: .5rem 0; }
+.invite-sent p { color: var(--color-muted); margin-bottom: .5rem; }
+.invite-link-row { display: flex; gap: .5rem; align-items: center; }
+.invite-link-input { flex: 1; font-size: .8rem; font-family: monospace; padding: .4rem .6rem; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); color: var(--color-muted); }
 
 /* ── Misc ── */
 

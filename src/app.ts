@@ -89,9 +89,9 @@ export function createApp(): express.Express {
   }
 
   app.use(authRoutes)
+  app.use(memberRoutes)
   app.use(boardRoutes)
   app.use(taskRoutes)
-  app.use(memberRoutes)
   app.use(sseRoutes)
 
   app.use((_req, res) => res.status(404).render('404.njk'))
